@@ -1,0 +1,25 @@
+{
+  "name": "@layr/mcp",
+  "version": "0.1.0",
+  "description": "MCP adapters for Layr integrations",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch"
+  },
+  "dependencies": {
+    "@layr/core": "workspace:*",
+    "@vercel/node": "^3.0.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "@clerk/clerk-sdk-node": "^4.13.0",
+    "stripe": "^14.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}

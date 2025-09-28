@@ -1,0 +1,28 @@
+{
+  "name": "@layr/cli",
+  "version": "0.1.0",
+  "description": "Layr CLI for natural language app generation",
+  "bin": {
+    "layr": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@layr/core": "workspace:*",
+    "@layr/agent": "workspace:*",
+    "@layr/mcp": "workspace:*",
+    "commander": "^11.1.0",
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/inquirer": "^9.0.7",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  }
+}
