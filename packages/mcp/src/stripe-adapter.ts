@@ -111,7 +111,7 @@ export class StripeAdapter extends BaseAdapter {
           for (const endpoint of endpoints) {
             await this.stripeSDK.webhookEndpoints.create({
               url: endpoint.url,
-              enabled_events: endpoint.events,
+              enabled_events: endpoint.events as Stripe.WebhookEndpointCreateParams.EnabledEvent[],
             });
           }
           return true;

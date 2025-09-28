@@ -49,8 +49,8 @@ export function BlueprintSelector({ intent, selected, onSelect }: BlueprintSelec
 
   const scoredBlueprints = blueprints.map(bp => {
     const bpCaps = new Set(bp.capabilities)
-    const intersection = new Set([...intentCaps].filter(x => bpCaps.has(x)))
-    const union = new Set([...intentCaps, ...bpCaps])
+    const intersection = new Set(Array.from(intentCaps).filter(x => bpCaps.has(x)))
+    const union = new Set([...Array.from(intentCaps), ...Array.from(bpCaps)])
     const score = intersection.size / union.size
     return { ...bp, score }
   }).sort((a, b) => b.score - a.score)

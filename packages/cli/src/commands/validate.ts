@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { validateIntent } from '@layr/core';
+import { validateIntentJson } from '@layr/core';
 import fs from 'fs';
 import path from 'path';
 
@@ -22,7 +22,7 @@ export const validateCommand = new Command('validate')
       const intent = JSON.parse(content);
 
       // Validate the intent
-      const result = validateIntent(intent);
+      const result = validateIntentJson(intent);
 
       if (result.valid) {
         console.log(chalk.green('✅ Intent is valid!\n'));

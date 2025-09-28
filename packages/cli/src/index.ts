@@ -30,11 +30,13 @@ program.on('command:*', () => {
   process.exit(1);
 });
 
-// Parse arguments
-program.parse(process.argv);
+// Only parse if running as main module
+if (require.main === module) {
+  // Parse arguments
+  program.parse(process.argv);
 
-// Show help if no command
-if (!process.argv.slice(2).length) {
+  // Show help if no command
+  if (!process.argv.slice(2).length) {
   console.log(chalk.cyan(`
 ╔═══════════════════════════════════════╗
 ║                                       ║
@@ -44,5 +46,8 @@ if (!process.argv.slice(2).length) {
 ║                                       ║
 ╚═══════════════════════════════════════╝
 `));
-  program.outputHelp();
+    program.outputHelp();
+  }
 }
+
+export { program };
