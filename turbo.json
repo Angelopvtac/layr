@@ -15,6 +15,10 @@
       "outputs": [],
       "dependsOn": ["build"]
     },
+    "type-check": {
+      "outputs": [],
+      "dependsOn": ["build"]
+    },
     "clean": {
       "cache": false
     }

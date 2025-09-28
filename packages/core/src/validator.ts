@@ -4,16 +4,16 @@ import intentSchema from '../intent.schema.json';
 import type { Intent } from './blueprint-chooser';
 
 const ajv = new Ajv({ allErrors: true });
-const validateIntent = ajv.compile(intentSchema);
+const validateIntentCompiled = ajv.compile(intentSchema);
 
 /**
  * Validate intent JSON against schema
  */
 export function validateIntentJson(data: unknown): { valid: boolean; errors?: string[] } {
-  const valid = validateIntent(data);
+  const valid = validateIntentCompiled(data);
 
   if (!valid) {
-    const errors = validateIntent.errors?.map(err =>
+    const errors = validateIntentCompiled.errors?.map(err =>
       `${err.instancePath} ${err.message}`
     ) || [];
     return { valid: false, errors };
@@ -21,6 +21,9 @@ export function validateIntentJson(data: unknown): { valid: boolean; errors?: st
 
   return { valid: true };
 }
+
+// Alias for backward compatibility - CI expects this name
+export const validateIntent = validateIntentJson;
 
 /**
  * Zod schema for runtime validation
