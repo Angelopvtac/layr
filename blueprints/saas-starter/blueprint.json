@@ -1,0 +1,114 @@
+{
+  "id": "saas-starter",
+  "name": "SaaS Starter",
+  "description": "Complete SaaS starter with payments, auth, and database",
+  "version": "0.1.0",
+  "capabilities": ["auth", "crud", "payments", "email", "analytics"],
+  "stack": {
+    "framework": "nextjs",
+    "ui": "shadcn",
+    "styling": "tailwind",
+    "auth": "clerk",
+    "database": "supabase",
+    "payments": "stripe",
+    "hosting": "vercel"
+  },
+  "structure": {
+    "directories": [
+      "app/(auth)",
+      "app/(marketing)",
+      "app/dashboard",
+      "app/api/stripe",
+      "app/api/webhooks",
+      "components/ui",
+      "components/features",
+      "lib/supabase",
+      "lib/stripe",
+      "lib/utils",
+      "migrations",
+      "public"
+    ],
+    "files": [
+      {
+        "path": "app/layout.tsx",
+        "template": "root-layout"
+      },
+      {
+        "path": "app/page.tsx",
+        "template": "landing-page"
+      },
+      {
+        "path": "app/(auth)/sign-in/page.tsx",
+        "template": "sign-in"
+      },
+      {
+        "path": "app/(auth)/sign-up/page.tsx",
+        "template": "sign-up"
+      },
+      {
+        "path": "app/dashboard/page.tsx",
+        "template": "dashboard"
+      },
+      {
+        "path": "app/dashboard/billing/page.tsx",
+        "template": "billing"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "name": "001_initial_schema",
+      "description": "Create initial database schema"
+    },
+    {
+      "name": "002_stripe_tables",
+      "description": "Create Stripe-related tables"
+    },
+    {
+      "name": "003_rls_policies",
+      "description": "Set up Row Level Security"
+    }
+  ],
+  "environment": {
+    "required": [
+      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+      "CLERK_SECRET_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "STRIPE_SECRET_KEY",
+      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "NEXT_PUBLIC_APP_URL"
+    ],
+    "optional": [
+      "CLERK_WEBHOOK_SECRET",
+      "RESEND_API_KEY",
+      "SENTRY_DSN"
+    ]
+  },
+  "pricing": {
+    "tiers": [
+      {
+        "id": "free",
+        "name": "Free",
+        "price": 0,
+        "features": ["5 projects", "Basic analytics", "Community support"]
+      },
+      {
+        "id": "pro",
+        "name": "Pro",
+        "price": 19,
+        "interval": "month",
+        "features": ["Unlimited projects", "Advanced analytics", "Priority support", "Custom domain"]
+      },
+      {
+        "id": "team",
+        "name": "Team",
+        "price": 49,
+        "interval": "month",
+        "features": ["Everything in Pro", "Team collaboration", "SSO", "Advanced permissions"]
+      }
+    ]
+  }
+}
