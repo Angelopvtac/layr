@@ -1,0 +1,109 @@
+{
+  "$id": "https://layr.dev/intent.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["goal", "audience", "capabilities"],
+  "properties": {
+    "goal": {
+      "type": "string",
+      "description": "What the user wants to accomplish"
+    },
+    "audience": {
+      "type": "string",
+      "enum": ["personal", "community", "business", "nonprofit", "education"],
+      "description": "Target audience for the application"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Required features and capabilities"
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "fields"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": ["string", "text", "number", "boolean", "date", "email", "url", "image", "json"]
+                },
+                "required": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "auth": {
+      "type": "string",
+      "enum": ["none", "magic_link", "social_login", "email_password"],
+      "default": "magic_link"
+    },
+    "payments": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": ["none", "one_time", "subscription", "usage"],
+          "default": "none"
+        },
+        "plans": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "priceMonthly": {
+                "type": "number"
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tagline": {
+          "type": "string"
+        }
+      }
+    },
+    "nonGoals": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Things explicitly not wanted"
+    }
+  }
+}

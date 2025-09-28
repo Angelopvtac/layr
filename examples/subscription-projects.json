@@ -1,0 +1,35 @@
+{
+  "goal": "Clients log in, create projects, and pay monthly",
+  "audience": "business",
+  "capabilities": ["auth", "crud", "payments", "email"],
+  "entities": [
+    {
+      "name": "Project",
+      "fields": [
+        { "name": "title", "type": "string", "required": true },
+        { "name": "description", "type": "text" },
+        { "name": "status", "type": "string" }
+      ]
+    }
+  ],
+  "auth": "magic_link",
+  "payments": {
+    "model": "subscription",
+    "plans": [
+      {
+        "name": "Starter",
+        "priceMonthly": 9,
+        "features": ["1 project", "Email support"]
+      },
+      {
+        "name": "Pro",
+        "priceMonthly": 29,
+        "features": ["Unlimited projects", "Priority support"]
+      }
+    ]
+  },
+  "brand": {
+    "name": "Projectify",
+    "tagline": "Projects, simplified."
+  }
+}

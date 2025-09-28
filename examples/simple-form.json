@@ -1,0 +1,22 @@
+{
+  "goal": "Collect emails and a short message from visitors",
+  "audience": "business",
+  "capabilities": ["collect_data"],
+  "entities": [
+    {
+      "name": "Submission",
+      "fields": [
+        { "name": "email", "type": "email", "required": true },
+        { "name": "message", "type": "text" }
+      ]
+    }
+  ],
+  "auth": "none",
+  "payments": {
+    "model": "none"
+  },
+  "brand": {
+    "name": "FormCollector",
+    "tagline": "We'd love to hear from you"
+  }
+}
