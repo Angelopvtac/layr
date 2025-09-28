@@ -1,3 +1,5 @@
+import { createLogger } from './logger';
+
 export interface Intent {
   goal: string;
   audience: 'personal' | 'community' | 'business' | 'nonprofit' | 'education';
@@ -33,34 +35,68 @@ export type BlueprintId =
   | 'marketplace-lite'
   | 'static-landing';
 
+// Cache for blueprint selection results
+const blueprintCache = new Map<string, BlueprintId>();
+const logger = createLogger('blueprint-chooser');
+
+/**
+ * Generate a cache key for an intent
+ */
+function getIntentCacheKey(intent: Intent): string {
+  return JSON.stringify({
+    audience: intent.audience,
+    capabilities: intent.capabilities?.sort(),
+    auth: intent.auth,
+    payments: intent.payments?.model
+  });
+}
+
 /**
  * Chooses the most appropriate blueprint based on intent
  */
 export function chooseBlueprint(intent: Intent): BlueprintId {
+  // Check cache first
+  const cacheKey = getIntentCacheKey(intent);
+  if (blueprintCache.has(cacheKey)) {
+    const cached = blueprintCache.get(cacheKey)!;
+    logger.debug('Using cached blueprint selection', { blueprint: cached });
+    return cached;
+  }
+
   const caps = new Set(intent.capabilities || []);
+
+  let selected: BlueprintId;
 
   // Payment-based apps get full SaaS treatment
   if (intent.payments?.model && intent.payments.model !== 'none') {
-    return 'saas-starter';
+    selected = 'saas-starter';
   }
-
   // Simple data collection without auth
-  if (caps.has('collect_data') && !caps.has('auth') && intent.auth === 'none') {
-    return 'form-to-db';
+  else if (caps.has('collect_data') && !caps.has('auth') && intent.auth === 'none') {
+    selected = 'form-to-db';
   }
-
   // Community features
-  if (caps.has('community') || caps.has('notifications') || caps.has('social')) {
-    return 'community-mini';
+  else if (caps.has('community') || caps.has('notifications') || caps.has('social')) {
+    selected = 'community-mini';
   }
-
   // CRUD with auth suggests marketplace
-  if (caps.has('crud') && caps.has('auth')) {
-    return 'marketplace-lite';
+  else if (caps.has('crud') && caps.has('auth')) {
+    selected = 'marketplace-lite';
+  }
+  // Default to landing page
+  else {
+    selected = 'static-landing';
   }
 
-  // Default to landing page
-  return 'static-landing';
+  // Cache the result
+  blueprintCache.set(cacheKey, selected);
+  logger.info('Blueprint selected', {
+    blueprint: selected,
+    audience: intent.audience,
+    capabilities: Array.from(caps)
+  });
+
+  return selected;
 }
 
 /**

@@ -2,9 +2,11 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import * as yaml from 'yaml';
 import type { Intent, TaskGraph, Task, TaskStatus } from '@layr/core';
+import { createLogger, withRetry, ProvisioningError, DeploymentError, ValidationError } from '@layr/core';
 
 export class AgentRunner {
   private prompts: Map<string, string> = new Map();
+  private logger = createLogger('AgentRunner');
 
   constructor() {
     this.loadPrompts();
@@ -19,7 +21,7 @@ export class AgentRunner {
         const content = readFileSync(join(promptsDir, `${file}.md`), 'utf-8');
         this.prompts.set(file, content);
       } catch (error) {
-        console.warn(`Failed to load prompt ${file}:`, error);
+        this.logger.warn(`Failed to load prompt ${file}`, { error });
       }
     }
   }
@@ -30,7 +32,7 @@ export class AgentRunner {
   async interpretRequest(request: string): Promise<Intent> {
     // In production, this would call an AI model
     // For now, return a mock intent
-    console.log('Interpreting request:', request);
+    this.logger.info('Interpreting request', { request });
     return {
       goal: request,
       audience: 'business',
@@ -43,7 +45,7 @@ export class AgentRunner {
    * Plan task execution graph
    */
   async planTasks(intent: Intent, blueprintId: string): Promise<TaskGraph> {
-    console.log('Planning tasks for blueprint:', blueprintId);
+    this.logger.info('Planning tasks', { blueprintId, goal: intent.goal });
 
     const tasks: Task[] = [
       { id: 'init', type: 'init_repo', status: 'pending' },
@@ -65,7 +67,7 @@ export class AgentRunner {
    * Execute a task graph
    */
   async executeTasks(graph: TaskGraph): Promise<void> {
-    console.log('Executing task graph with', graph.tasks.length, 'tasks');
+    this.logger.info(`Executing task graph`, { taskCount: graph.tasks.length });
 
     for (const task of graph.tasks) {
       if (task.dependencies) {
@@ -76,24 +78,44 @@ export class AgentRunner {
 
         const allComplete = deps.every(d => d.status === 'completed');
         if (!allComplete) {
-          console.log(`Skipping ${task.id} - dependencies not met`);
+          this.logger.warn(`Skipping task - dependencies not met`, { taskId: task.id });
           task.status = 'skipped';
           continue;
         }
       }
 
-      console.log(`Executing task: ${task.id} (${task.type})`);
+      this.logger.info(`Executing task`, { taskId: task.id, type: task.type });
       task.status = 'running';
 
       try {
-        // Execute based on type
-        await this.executeTask(task);
+        // Execute with retry for recoverable errors
+        await this.logger.time(
+          `task_${task.id}`,
+          async () => {
+            if (task.type === 'provision_backends' || task.type === 'deploy_prod') {
+              // These operations may fail temporarily
+              return await withRetry(
+                () => this.executeTask(task),
+                {
+                  maxRetries: 3,
+                  onRetry: (attempt, error) => {
+                    this.logger.warn(`Retrying task`, { taskId: task.id, attempt, error });
+                  }
+                }
+              );
+            } else {
+              return await this.executeTask(task);
+            }
+          },
+          { taskId: task.id }
+        );
         task.status = 'completed';
-        console.log(`✅ Completed: ${task.id}`);
+        this.logger.info(`Task completed`, { taskId: task.id });
       } catch (error) {
         task.status = 'failed';
         task.error = String(error);
-        console.error(`❌ Failed: ${task.id}`, error);
+        this.logger.error(`Task failed`, error, { taskId: task.id });
+        throw error;
       }
     }
   }
@@ -125,16 +147,16 @@ export class AgentRunner {
    * Verify deployment
    */
   async verifyDeployment(previewUrl: string): Promise<boolean> {
-    console.log('Verifying deployment at:', previewUrl);
+    this.logger.info('Verifying deployment', { previewUrl });
 
     try {
       // In production, this would run actual smoke tests
       // For now, simulate verification
       await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('✅ Verification passed');
+      this.logger.info('Verification passed', { previewUrl });
       return true;
     } catch (error) {
-      console.error('❌ Verification failed:', error);
+      this.logger.error('Verification failed', error, { previewUrl });
       return false;
     }
   }
@@ -152,13 +174,12 @@ export class AgentRunner {
       intent = intentOrPath;
     }
 
-    console.log('🚀 Starting Layr pipeline...');
-    console.log('Intent:', intent.goal);
+    this.logger.info('Starting Layr pipeline', { goal: intent.goal });
 
     // Choose blueprint
     const { chooseBlueprint } = await import('@layr/core');
     const blueprintId = chooseBlueprint(intent);
-    console.log('Selected blueprint:', blueprintId);
+    this.logger.info('Blueprint selected', { blueprintId });
 
     // Plan tasks
     const taskGraph = await this.planTasks(intent, blueprintId);
@@ -190,9 +211,11 @@ export async function runLayr(intentPath: string): Promise<void> {
   const result = await runner.run(intentPath);
 
   if (result.success && result.previewUrl) {
-    console.log('\n🎉 SUCCESS! Your app is live at:', result.previewUrl);
+    const logger = createLogger('layr-cli');
+    logger.info('SUCCESS! Your app is live', { previewUrl: result.previewUrl });
   } else {
-    console.error('\n❌ Pipeline failed');
+    const logger = createLogger('layr-cli');
+    logger.error('Pipeline failed');
     process.exit(1);
   }
 }

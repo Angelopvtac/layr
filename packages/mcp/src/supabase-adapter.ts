@@ -1,10 +1,13 @@
 import { BaseAdapter } from './base-adapter';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { execSync } from 'child_process';
+import { createLogger, withRetry, NetworkError } from '@layr/core';
 
 export class SupabaseAdapter extends BaseAdapter {
   private supabaseClient?: SupabaseClient;
   private supabaseCLI: boolean = false;
+  private logger = createLogger('SupabaseAdapter');
+  private connectionCache = new Map<string, SupabaseClient>();
 
   getServiceName(): string {
     return 'supabase';
@@ -15,14 +18,36 @@ export class SupabaseAdapter extends BaseAdapter {
     try {
       execSync('supabase --version', { stdio: 'ignore' });
       this.supabaseCLI = true;
-      console.log('Supabase CLI detected');
+      this.logger.info('Supabase CLI detected');
     } catch {
-      console.log('Supabase CLI not found, will use SDK');
+      this.logger.info('Supabase CLI not found, will use SDK');
     }
 
-    // Initialize Supabase client if credentials are provided
+    // Initialize Supabase client with connection caching
     if (this.config.url && this.config.anonKey) {
-      this.supabaseClient = createClient(this.config.url, this.config.anonKey);
+      const cacheKey = `${this.config.url}:${this.config.anonKey}`;
+
+      if (!this.connectionCache.has(cacheKey)) {
+        this.logger.debug('Creating new Supabase client connection', { url: this.config.url });
+        const client = createClient(this.config.url, this.config.anonKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true
+          },
+          db: {
+            schema: 'public'
+          },
+          global: {
+            headers: {
+              'x-layr-version': '1.0.0'
+            }
+          }
+        });
+        this.connectionCache.set(cacheKey, client);
+      }
+
+      this.supabaseClient = this.connectionCache.get(cacheKey);
+      this.logger.debug('Using cached Supabase client connection');
     }
   }
 
@@ -30,24 +55,35 @@ export class SupabaseAdapter extends BaseAdapter {
    * Create a new Supabase project
    */
   async createProject(name: string, region?: string): Promise<ProjectResult> {
-    return this.executeWithFallback(
-      async () => {
-        const result = await this.mcpClient.execute('supabase', 'createProject', {
-          name,
-          region: region || 'us-east-1'
-        });
-        return {
-          projectId: result.projectId,
-          url: result.url,
-          anonKey: result.anonKey,
-          success: true
-        };
-      },
+    return this.logger.time(
+      'create_project',
+      () => this.executeWithFallback(
+        async () => {
+          const result = await withRetry(
+            () => this.mcpClient.execute('supabase', 'createProject', {
+              name,
+              region: region || 'us-east-1'
+            }),
+            {
+              maxRetries: 3,
+              onRetry: (attempt, error) => {
+                this.logger.warn('Retrying project creation', { attempt, error });
+              }
+            }
+          );
+          this.logger.info('Project created successfully', { projectId: result.projectId });
+          return {
+            projectId: result.projectId,
+            url: result.url,
+            anonKey: result.anonKey,
+            success: true
+          };
+        },
       async () => {
         if (this.supabaseCLI) {
-          console.log(`Would create Supabase project ${name} via CLI`);
+          this.logger.info(`Would create Supabase project via CLI`, { name });
         } else {
-          console.log(`Would create Supabase project ${name} via API`);
+          this.logger.info(`Would create Supabase project via API`, { name });
         }
         return {
           projectId: `sb-${name}`,
@@ -55,7 +91,7 @@ export class SupabaseAdapter extends BaseAdapter {
           anonKey: 'mock-anon-key',
           success: true
         };
-      }
+      })
     );
   }
 

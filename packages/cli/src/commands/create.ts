@@ -4,8 +4,11 @@ import inquirer from 'inquirer';
 import ora from 'ora';
 import { AgentRunner } from '@layr/agent';
 import type { Intent } from '@layr/core';
+import { createLogger, ValidationError, withRetry } from '@layr/core';
 import fs from 'fs';
 import path from 'path';
+
+const logger = createLogger('cli:create');
 
 export const createCommand = new Command('create')
   .description('Create a new app from natural language description')
@@ -23,7 +26,9 @@ export const createCommand = new Command('create')
         const content = fs.readFileSync(intentPath, 'utf-8');
         intent = JSON.parse(content);
         console.log(chalk.green('✓ Loaded intent from file'));
+        logger.info('Loaded intent from file', { intentPath });
       } catch (error) {
+        logger.error('Failed to load intent file', error);
         console.error(chalk.red('Failed to load intent file:'), error);
         process.exit(1);
       }
@@ -31,8 +36,23 @@ export const createCommand = new Command('create')
       // Use natural language description
       const runner = new AgentRunner();
       const spinner = ora('Interpreting your request...').start();
-      intent = await runner.interpretRequest(description);
-      spinner.succeed('Request interpreted');
+      try {
+        intent = await withRetry(
+          () => runner.interpretRequest(description),
+          {
+            maxRetries: 2,
+            onRetry: (attempt) => {
+              spinner.text = `Interpreting your request (attempt ${attempt + 1})...`;
+            }
+          }
+        );
+        spinner.succeed('Request interpreted');
+        logger.info('Request interpreted', { description });
+      } catch (error) {
+        spinner.fail('Failed to interpret request');
+        logger.error('Failed to interpret request', error);
+        throw new ValidationError('Could not interpret your request. Please try again with more detail.');
+      }
     } else {
       // Interactive mode
       const answers = await inquirer.prompt([
@@ -107,19 +127,34 @@ export const createCommand = new Command('create')
 
     // Run the pipeline
     console.log(chalk.cyan('\n🚀 Starting Layr pipeline...\n'));
+    logger.info('Starting pipeline', { intent });
 
     const runner = new AgentRunner();
-    const result = await runner.run(intent);
 
-    if (result.success && result.previewUrl) {
-      console.log(chalk.green('\n✅ Success! Your app is ready'));
-      console.log(chalk.cyan('Preview URL:'), chalk.underline(result.previewUrl));
-      console.log(chalk.gray('\nNext steps:'));
-      console.log(chalk.gray('  1. Visit your preview URL'));
-      console.log(chalk.gray('  2. Test the functionality'));
-      console.log(chalk.gray('  3. Run `layr deploy` to go to production'));
-    } else {
+    try {
+      const result = await logger.time(
+        'pipeline_execution',
+        () => runner.run(intent),
+        { outputDir: options.output }
+      );
+
+      if (result.success && result.previewUrl) {
+        logger.info('Pipeline completed successfully', { previewUrl: result.previewUrl });
+        console.log(chalk.green('\n✅ Success! Your app is ready'));
+        console.log(chalk.cyan('Preview URL:'), chalk.underline(result.previewUrl));
+        console.log(chalk.gray('\nNext steps:'));
+        console.log(chalk.gray('  1. Visit your preview URL'));
+        console.log(chalk.gray('  2. Test the functionality'));
+        console.log(chalk.gray('  3. Run `layr deploy` to go to production'));
+      } else {
+        throw new Error('Pipeline failed without preview URL');
+      }
+    } catch (error) {
+      logger.error('Pipeline failed', error);
       console.error(chalk.red('\n❌ Pipeline failed'));
+      if (error instanceof Error) {
+        console.error(chalk.gray(error.message));
+      }
       console.log(chalk.gray('Run with --debug for more information'));
       process.exit(1);
     }
