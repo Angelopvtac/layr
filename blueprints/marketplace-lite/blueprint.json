@@ -1,0 +1,70 @@
+{
+  "id": "marketplace-lite",
+  "name": "Marketplace Lite",
+  "description": "Two-sided marketplace with listings and transactions",
+  "version": "0.1.0",
+  "capabilities": ["auth", "crud", "payments", "search", "files"],
+  "stack": {
+    "framework": "nextjs",
+    "ui": "shadcn",
+    "styling": "tailwind",
+    "auth": "clerk",
+    "database": "supabase",
+    "payments": "stripe",
+    "hosting": "vercel"
+  },
+  "structure": {
+    "directories": [
+      "app/(auth)",
+      "app/listings",
+      "app/seller",
+      "app/buyer",
+      "app/api/stripe",
+      "components/ui",
+      "components/listings",
+      "lib/supabase",
+      "lib/stripe",
+      "migrations"
+    ],
+    "files": [
+      {
+        "path": "app/layout.tsx",
+        "template": "root-layout"
+      },
+      {
+        "path": "app/page.tsx",
+        "template": "marketplace-home"
+      },
+      {
+        "path": "app/listings/[id]/page.tsx",
+        "template": "listing-detail"
+      },
+      {
+        "path": "app/seller/dashboard/page.tsx",
+        "template": "seller-dashboard"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "name": "001_marketplace_schema",
+      "description": "Create listings, transactions, and reviews"
+    }
+  ],
+  "environment": {
+    "required": [
+      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+      "CLERK_SECRET_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "STRIPE_SECRET_KEY",
+      "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+      "STRIPE_WEBHOOK_SECRET"
+    ],
+    "optional": [
+      "CLOUDINARY_URL",
+      "SENDGRID_API_KEY"
+    ]
+  }
+}

@@ -7,7 +7,9 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "test": "turbo test",
-    "clean": "turbo clean && rm -rf node_modules"
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf node_modules",
+    "setup": "node scripts/setup.js"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

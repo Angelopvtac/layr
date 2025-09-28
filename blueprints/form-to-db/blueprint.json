@@ -1,0 +1,59 @@
+{
+  "id": "form-to-db",
+  "name": "Form to Database",
+  "description": "Simple form that saves submissions to a database",
+  "version": "0.1.0",
+  "capabilities": ["crud", "email"],
+  "stack": {
+    "framework": "nextjs",
+    "ui": "shadcn",
+    "styling": "tailwind",
+    "database": "supabase",
+    "hosting": "vercel"
+  },
+  "structure": {
+    "directories": [
+      "app/api",
+      "components/ui",
+      "components/forms",
+      "lib/supabase",
+      "lib/utils",
+      "migrations"
+    ],
+    "files": [
+      {
+        "path": "app/layout.tsx",
+        "template": "root-layout"
+      },
+      {
+        "path": "app/page.tsx",
+        "template": "form-page"
+      },
+      {
+        "path": "app/success/page.tsx",
+        "template": "success-page"
+      },
+      {
+        "path": "app/admin/page.tsx",
+        "template": "admin-page"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "name": "001_form_submissions",
+      "description": "Create form submissions table"
+    }
+  ],
+  "environment": {
+    "required": [
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ],
+    "optional": [
+      "RESEND_API_KEY",
+      "NOTIFICATION_EMAIL"
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "community-mini",
+  "name": "Community Mini",
+  "description": "Simple community platform with posts and comments",
+  "version": "0.1.0",
+  "capabilities": ["auth", "crud", "search"],
+  "stack": {
+    "framework": "nextjs",
+    "ui": "shadcn",
+    "styling": "tailwind",
+    "auth": "clerk",
+    "database": "supabase",
+    "hosting": "vercel"
+  },
+  "structure": {
+    "directories": [
+      "app/(auth)",
+      "app/community",
+      "app/profile",
+      "app/api",
+      "components/ui",
+      "components/posts",
+      "lib/supabase",
+      "lib/utils",
+      "migrations"
+    ],
+    "files": [
+      {
+        "path": "app/layout.tsx",
+        "template": "root-layout"
+      },
+      {
+        "path": "app/page.tsx",
+        "template": "feed-page"
+      },
+      {
+        "path": "app/community/post/[id]/page.tsx",
+        "template": "post-page"
+      },
+      {
+        "path": "app/profile/[username]/page.tsx",
+        "template": "profile-page"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "name": "001_community_schema",
+      "description": "Create posts, comments, and profiles"
+    }
+  ],
+  "environment": {
+    "required": [
+      "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+      "CLERK_SECRET_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    ],
+    "optional": [
+      "MODERATION_API_KEY",
+      "DISCORD_WEBHOOK_URL"
+    ]
+  }
+}

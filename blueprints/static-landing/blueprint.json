@@ -1,0 +1,54 @@
+{
+  "id": "static-landing",
+  "name": "Static Landing Page",
+  "description": "Marketing landing page with waitlist signup",
+  "version": "0.1.0",
+  "capabilities": ["email"],
+  "stack": {
+    "framework": "nextjs",
+    "ui": "shadcn",
+    "styling": "tailwind",
+    "database": "supabase",
+    "hosting": "vercel"
+  },
+  "structure": {
+    "directories": [
+      "app/api",
+      "components/ui",
+      "components/sections",
+      "lib/supabase",
+      "lib/utils",
+      "public/images"
+    ],
+    "files": [
+      {
+        "path": "app/layout.tsx",
+        "template": "root-layout"
+      },
+      {
+        "path": "app/page.tsx",
+        "template": "landing-page"
+      },
+      {
+        "path": "app/thank-you/page.tsx",
+        "template": "thank-you-page"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "name": "001_waitlist",
+      "description": "Create waitlist table"
+    }
+  ],
+  "environment": {
+    "required": [
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    ],
+    "optional": [
+      "RESEND_API_KEY",
+      "GOOGLE_ANALYTICS_ID"
+    ]
+  }
+}
