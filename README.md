@@ -1,4 +1,12 @@
-# Layr — Plain Words → Shipped Apps
+# 🚀 Layr — Plain Words → Shipped Apps
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-9.11-orange)](https://pnpm.io/)
+[![Turborepo](https://img.shields.io/badge/Turborepo-2.0-red)](https://turbo.build/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+> Transform plain-English descriptions into production-ready applications with a single command.
 
 Layr is a friendly layer between people and code. Users describe what they want; Layr interprets intent, chooses a blueprint, provisions backends, scaffolds code, deploys, and verifies—no dev jargon required.
 
